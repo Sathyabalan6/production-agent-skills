@@ -1,0 +1,28 @@
+# .github/workflows/slopsquat-gate.yml
+name: Dependency Hallucination Check
+on:
+  pull_request:
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+      - 'pnpm-lock.yaml'
+      - 'yarn.lock'
+      - 'requirements.txt'
+      - 'pyproject.toml'
+
+jobs:
+  verify-packages:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Initialize Python Environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Execute Slopsquat Audit
+        run: |
+          pip install slopgate
+          slopgate scan . --strict
