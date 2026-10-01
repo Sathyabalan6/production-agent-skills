@@ -40,7 +40,7 @@ The ergonomic thumb arc on handheld touchscreens is modeled in polar coordinates
 - Functional reach radius: $r_{\min} \approx 35\text{ mm}$, $r_{\max} \approx 75\text{ mm}$.
 - In viewport CSS coordinates:
   $$\text{Zone}_{\text{natural}} = \left\{ (x, y) \mid y \ge 0.65 \cdot H_v \land \sqrt{(x - W_v)^2 + (y - H_v)^2} \le r_{\max} \right\}$$
-  Anchor controls within the bottom $120\text{ px}$ to eliminate reach displacement ($D \to 0$).
+  Anchor primary interactive controls within this lower 30–35% viewport zone ($y \ge 0.65 \cdot H_v$) to minimize reach displacement ($D \to 0 \implies MT \to a$). Avoid static pixel cutoffs, as screen heights vary significantly across mobile devices.
 
 ---
 
@@ -68,17 +68,20 @@ $$\|C_1 - C_2\|_2 = \sqrt{(C_{2x} - C_{1x})^2 + (C_{2y} - C_{1y})^2} \ge 2r = 24
 
 ---
 
-## 5. Statistical Agent Benchmarking & Vulnerability Decay
+## 5. Statistical Agent Benchmarking & Degradation Dynamics
 
-### Compounding Degradation Dynamics
-Given per-round vulnerability regression rate $r$:
+### Compounding Iteration Degradation Model
+When autonomous agents perform sequential multi-turn refactoring without automated test gates, defensive assertions and accessibility attributes tend to decay across iterative rounds:
 $$V_n = V_0 \cdot (1 + r)^n$$
-When $n = 5$ iterations yield $V_5 = 1.376 \cdot V_0$:
-$$r = 1.376^{1/5} - 1 \approx 0.0659\text{ (6.59% compounding decay per round)}$$
+Where:
+- $V_0$: Initial defect count or vulnerability baseline.
+- $r$: Empirical per-round degradation rate (determined experimentally per agent/prompt setup).
+- $n$: Number of unguided modification turns.
+Automated validation gates truncate compounding degradation by arresting turns where $V_{n} > V_{n-1}$.
 
 ### Cohen's Kappa ($\kappa$) Inter-Rater Reliability
 $$\kappa = \frac{P_o - P_e}{1 - P_e}$$
 Where:
 - $P_o$: Observed proportional agreement between LLM evaluator and human ground truth.
 - $P_e$: Chance agreement calculated from marginal probabilities.
-- $\kappa \ge 0.85$ defines production calibration for automated judging pipelines.
+- Benchmark Standard (Landis & Koch, 1977): $\kappa \in [0.61, 0.80]$ indicates substantial agreement; $\kappa > 0.80$ indicates near-perfect calibration for automated LLM evaluation pipelines.

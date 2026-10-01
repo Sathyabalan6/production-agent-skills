@@ -76,10 +76,14 @@ The agent must enforce the following technical criteria across all generated cod
 
 ## 4. Deterministic Verification Standard
 
-Before declaring task completion, execute the bundled verification test:
+Before declaring task completion, verify accessibility against the running application:
 
 ```bash
-npx playwright test scripts/a11y-audit.spec.ts
+# Execute against local dev server (configured via playwright.config.ts, default: http://127.0.0.1:3000)
+npx playwright test
+
+# Or audit against an explicit custom URL
+TARGET_URL=http://localhost:8080 npx playwright test
 ```
 
 Verify that zero violations are returned across `wcag2a`, `wcag2aa`, and `wcag22aa` tag suites.

@@ -34,25 +34,34 @@ metadata:
 
 ## Module 1: Fluid Typography via Linear Interpolation (WCAG 1.4.4 Correct)
 
-**Problem:** Pure `vw`/`cqi` clamps ignore user root font-size preferences and violate WCAG 2.2 SC 1.4.4 (Resize Text). Text must be able to scale to 200%.
+**Problem:** Pure `vw`/`cqi` clamps ignore user root font-size preferences and violate WCAG 2.2 SC 1.4.4 (Resize Text). Text must scale proportionally with user zoom up to 200%.
 
-**Math (point-slope form, every term in `rem`):**
-$$m = \frac{y_2 - y_1}{x_2 - x_1}, \qquad b = \frac{x_1 y_2 - x_2 y_1}{x_1 - x_2}$$
+**Formula (Point-Slope Interpolation):**
+- Slope `m = (y2 - y1) / (x2 - x1)`
+- Intercept `b = y1 - (m * x1)`
+- Viewport contribution `= m * 100vw`
 
-**Rules (non-negotiable):**
-1. Min and max bounds must be in `rem` (so they scale with user preference).
-2. The preferred (middle) value must mix `rem` + viewport/container units: `1rem + 2vw`, never pure `vw`.
-3. Keep $\max \le 2.5 \times \min$ as a practical ceiling so 200% zoom remains reachable. Test with actual browser zoom.
+**Implementation Rules:**
+1. Min and max bounds must be in `rem` so they honor user root font preferences.
+2. The preferred (middle) value must mix `rem` + viewport/container units (e.g. `0.625rem + 2.5vw`), never pure `vw`.
+3. Keep max <= 2.5 × min as a practical ceiling so 200% zoom remains reachable. Verify in-browser.
 4. Never declare `user-scalable=no` or `maximum-scale=1`.
 
 ```css
 /*
-  Target: 1.125rem at 320px container, 2.5rem at 1200px container.
-  m = (2.5 - 1.125) / (1200 - 320) = 0.001563 rem/px -> * 100 = 0.1563 (as a vw/cqi coefficient)
-  b = 1.125 - (0.001563 * 320) ≈ 0.625rem
+  Target: 1.125rem (18px) at 320px viewport, 2.5rem (40px) at 1200px viewport.
+  Assuming default 1rem = 16px:
+    y1 = 18px, y2 = 40px, x1 = 320px, x2 = 1200px
+    m = (40px - 18px) / (1200px - 320px) = 22 / 880 = 0.025 (2.5% of viewport width -> 2.5vw)
+    b = 18px - (0.025 * 320px) = 18px - 8px = 10px -> 10px / 16px = 0.625rem
+  Result: clamp(1.125rem, 0.625rem + 2.5vw, 2.5rem)
+  Verification:
+    At 320px:  0.625rem (10px) + 2.5vw (8px)  = 18px (1.125rem) -> exact match
+    At 760px:  0.625rem (10px) + 2.5vw (19px) = 29px (1.8125rem) -> smoothly scales
+    At 1200px: 0.625rem (10px) + 2.5vw (30px) = 40px (2.5rem)    -> exact match
 */
 .fluid-heading {
-  font-size: clamp(1.125rem, 0.625rem + 0.1563vw, 2.5rem);
+  font-size: clamp(1.125rem, 0.625rem + 2.5vw, 2.5rem);
 }
 ```
 
@@ -60,12 +69,13 @@ $$m = \frac{y_2 - y_1}{x_2 - x_1}, \qquad b = \frac{x_1 y_2 - x_2 y_1}{x_1 - x_2
 
 ## Module 2: Radial Layouts via Native CSS Trigonometry
 
-Native support for `sin()`, `cos()`, `atan2()` is Baseline widely available.
+Native support for `sin()`, `cos()`, and `atan2()` is Baseline widely available.
 
-**Formulas:**
-$$\theta_i = \frac{360^\circ}{N} \times i, \quad X = r \cdot \cos\theta_i, \quad Y = r \cdot \sin\theta_i, \quad \phi = \operatorname{atan2}(Y, X)$$
-
-*Coordinate gotcha: DOM Y increases downward. Always verify direction visually.*
+Coordinate mapping:
+- Angle step: `calc(360deg / var(--total-nodes))`
+- Node angle: `calc(var(--angle-step) * var(--i))`
+- Polar to Cartesian: `x = cos(angle) * radius`, `y = sin(angle) * radius`
+- Tangent orientation: `rotate(atan2(y, x))` (DOM Y increases downward)
 
 ```css
 .radial-container {
@@ -136,17 +146,46 @@ $$\theta_i = \frac{360^\circ}{N} \times i, \quad X = r \cdot \cos\theta_i, \quad
 
 ---
 
-## Module 5: Absolute Coordinates via `DOMMatrixReadOnly`
+## Module 5: Transformed Geometry via `DOMMatrixReadOnly`
+
+Extract true transformed coordinates, scale factors, and rotation angles from rendered elements without brittle regex parsing.
 
 ```javascript
-function getAbsoluteGeometry(el) {
+/**
+ * Decomposes CSS transforms and resolves true transformed geometry
+ * using the standard DOMMatrixReadOnly API.
+ */
+function getTransformedGeometry(el) {
   const rect = el.getBoundingClientRect();
-  const { scrollX, scrollY } = window;
+  const style = window.getComputedStyle(el);
+  const transform = style.transform;
+
+  // Parse 2D or 3D transform matrix via DOMMatrixReadOnly
+  const matrix = transform && transform !== 'none'
+    ? new DOMMatrixReadOnly(transform)
+    : new DOMMatrixReadOnly();
+
+  // Extract decomposed components
+  const scaleX = Math.hypot(matrix.a, matrix.b);
+  const scaleY = Math.hypot(matrix.c, matrix.d);
+  const rotationDeg = Math.round(Math.atan2(matrix.b, matrix.a) * (180 / Math.PI));
+
+  // Transform element center point through the matrix
+  const centerPoint = new DOMPoint(rect.width / 2, rect.height / 2);
+  const transformedCenter = matrix.transformPoint(centerPoint);
+
   return {
-    x: rect.left + scrollX,
-    y: rect.top + scrollY,
-    centroidX: rect.left + scrollX + rect.width / 2,
-    centroidY: rect.top + scrollY + rect.height / 2,
+    rect,
+    matrix,
+    scaleX: Number(scaleX.toFixed(4)),
+    scaleY: Number(scaleY.toFixed(4)),
+    rotationDeg,
+    centroidX: rect.left + window.scrollX + rect.width / 2,
+    centroidY: rect.top + window.scrollY + rect.height / 2,
+    transformedCenter: {
+      x: rect.left + window.scrollX + transformedCenter.x,
+      y: rect.top + window.scrollY + transformedCenter.y,
+    },
   };
 }
 ```

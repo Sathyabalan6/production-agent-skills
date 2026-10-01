@@ -3,10 +3,10 @@
 Quantitative UX Metrics & Cognitive Calculation Engine
 Provides deterministic calculation functions for HCI mathematical models:
 - Hick-Hyman Decision Time & Information Entropy
-- Fitts's Law Index of Difficulty (ID) & Movement Time (MT)
+- Fitts's Law Index of Difficulty (ID) & Movement Time (MT) (Shannon formulation default)
 - WCAG 2.2 SC 2.5.8 Target Centroid Distance & Circle Spacing
 - INP Cooperative Task Batching Sizing
-- Compounding Iterative Vulnerability Degradation
+- Compounding Defect / Iteration Drift Modeling
 """
 
 import math
@@ -16,6 +16,7 @@ from typing import Dict, Any, Tuple
 def calc_hick_hyman(n_choices: int, b_rate_ms: float = 200.0) -> Dict[str, float]:
     """
     Computes Hick-Hyman decision time: T = b * log2(n + 1)
+    Hick's Law models decision time logarithmically as a function of alternatives.
     """
     if n_choices < 1:
         raise ValueError("n_choices must be at least 1")
@@ -25,7 +26,6 @@ def calc_hick_hyman(n_choices: int, b_rate_ms: float = 200.0) -> Dict[str, float
         "choices": n_choices,
         "entropy_bits": round(entropy_bits, 4),
         "decision_time_ms": round(decision_time_ms, 2),
-        "exceeds_threshold_5": n_choices > 5
     }
 
 def calc_fitts_law(
@@ -33,21 +33,25 @@ def calc_fitts_law(
     width_px: float,
     a_intercept_ms: float = 50.0,
     b_slope_ms: float = 120.0,
-    formulation: str = "fitts"
+    formulation: str = "shannon"
 ) -> Dict[str, float]:
     """
     Computes Fitts's Law Movement Time: MT = a + b * ID
     Formulations:
-      - 'fitts': ID = log2(2D / W)
-      - 'shannon': ID = log2(D / W + 1)
+      - 'shannon' (Default; MacKenzie 1992, ISO 9241-9): ID = log2(D / W + 1)
+        Guarantees ID >= 0 even when target width exceeds distance (large close targets).
+      - 'fitts' (Original 1954): ID = log2(2D / W)
+        Can produce negative ID when 2D < W.
     """
     if width_px <= 0 or distance_px <= 0:
         raise ValueError("Distance and width must be positive non-zero numbers")
 
     if formulation.lower() == "shannon":
         id_bits = math.log2((distance_px / width_px) + 1.0)
-    else:
+    elif formulation.lower() == "fitts":
         id_bits = math.log2((2.0 * distance_px) / width_px)
+    else:
+        raise ValueError(f"Unknown formulation '{formulation}'. Choose 'shannon' or 'fitts'.")
 
     mt_ms = a_intercept_ms + (b_slope_ms * id_bits)
     return {
@@ -96,8 +100,8 @@ def calc_inp_batch_slice(per_item_latency_ms: float, max_slice_budget_ms: float 
 
 def calc_vulnerability_decay(v0: float, rate_r: float, rounds_n: int) -> float:
     """
-    Computes compounding vulnerability growth across n unguided LLM refinement rounds:
-    V_n = V_0 * (1 + r)^n
+    Computes compounding defect or drift growth across n unguided refinement rounds:
+    V_n = V_0 * (1 + r)^n given an empirical per-round degradation rate r.
     """
     return round(v0 * math.pow(1.0 + rate_r, rounds_n), 4)
 
@@ -106,8 +110,11 @@ if __name__ == "__main__":
     hick = calc_hick_hyman(5)
     print(f"Hick-Hyman (n=5 choices): {hick['entropy_bits']} bits -> {hick['decision_time_ms']} ms")
 
-    fitts = calc_fitts_law(distance_px=240, width_px=48)
-    print(f"Fitts's Law (D=240px, W=48px): ID={fitts['index_of_difficulty_bits']} bits -> MT={fitts['movement_time_ms']} ms")
+    fitts_default = calc_fitts_law(distance_px=20, width_px=48)
+    print(f"Fitts's Law (Shannon, D=20px, W=48px): ID={fitts_default['index_of_difficulty_bits']} bits -> MT={fitts_default['movement_time_ms']} ms")
+
+    fitts_far = calc_fitts_law(distance_px=240, width_px=48)
+    print(f"Fitts's Law (Shannon, D=240px, W=48px): ID={fitts_far['index_of_difficulty_bits']} bits -> MT={fitts_far['movement_time_ms']} ms")
 
     wcag = check_wcag_target_spacing((0, 0, 16, 16), (20, 0, 16, 16))
     print(f"WCAG 2.5.8 Spacing: Distance={wcag['centroid_distance_px']}px -> Passes: {wcag['conforms_sc_2_5_8']}")

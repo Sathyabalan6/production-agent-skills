@@ -1,8 +1,8 @@
 # Production Agent Skills
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Agent Skills Standard](https://img.shields.io/badge/Standard-Agent%20Skills%202026-brightgreen.svg)](CONTRIBUTING.md)
-[![CI Status](https://img.shields.io/badge/CI-Passing-success.svg)](.github/workflows/validate-skills.yml)
+[![Specification](https://img.shields.io/badge/Specification-Agent%20Skills%20Open%20Standard-blue.svg)](CONTRIBUTING.md)
+[![CI Status](https://github.com/Sathyabalan6/production-agent-skills/actions/workflows/validate-skills.yml/badge.svg)](https://github.com/Sathyabalan6/production-agent-skills/actions/workflows/validate-skills.yml)
 [![Platform](https://img.shields.io/badge/Platform-Antigravity%20%7C%20Claude%20Code%20%7C%20Cursor%20%7C%20Codex-purple.svg)](install.sh)
 
 A curated suite of high-reliability, deterministic **Agent Skills** conforming to the **Agent Skills Open Standard**. These skills constrain autonomous AI coding agents during full-stack web development, replacing subjective narrative advice with prescriptive syntactic constraints, three-tier progressive disclosure, and automated verification gates.
@@ -44,19 +44,19 @@ cd production-agent-skills
 
 | Skill Name | Scope & Operational Focus | Deterministic Gates & Tools |
 | :--- | :--- | :--- |
-| **[`ai-website-polish`](ai-website-polish/SKILL.md)** | Audits vibe-coded apps for launch readiness: WCAG 2.2 AA (SC 2.4.11, 2.5.8, 3.3.8, 2.5.7), INP long-task chunking, and mobile viewport constraints. | Playwright + `@axe-core/playwright` (`scripts/a11y-audit.spec.ts`) |
-| **[`website-data-protection`](website-data-protection/SKILL.md)** | Eliminates Server Action BOLA/IDOR, configures dynamic nonce-based CSP (`'strict-dynamic'`), and protects against AI-hallucinated packages. | Semgrep rulesets & Slopsquat CI manifest scanning |
-| **[`quantitative-ux-engine`](quantitative-ux-engine/SKILL.md)** | Computes decision entropy ($T = b \log_2(n+1)$), Fitts's movement time, WCAG centroid geometry, and iteration degradation rates ($r \approx 6.59\%$). | Python CLI calculation engine (`scripts/ux-metrics.py`) |
-| **[`ux-laws-for-ai-design`](ux-laws-for-ai-design/SKILL.md)** | Translates cognitive psychology heuristics into layout constraints: $\le 5$ top-level choices, $\ge 48\text{px}$ CTAs, $3\text{–}7$ item clusters. | Parametric layout engine & mandatory 3-part response contract |
-| **[`frontend-math-precision`](frontend-math-precision/SKILL.md)** | Replaces magic numbers with CSS-native trigonometry (`sin`, `cos`, `atan2`), fluid `clamp()`, `linear()` easing, and container query units. | Browser Baseline support checks and reduced-motion fallbacks |
+| **[`ai-website-polish`](ai-website-polish/SKILL.md)** | Audits rapidly prototyped apps for launch readiness: WCAG 2.2 AA (SC 2.4.11, 2.5.8 spacing/inline, 3.3.8, 2.5.7), INP task chunking, and viewport constraints. | Playwright + `@axe-core/playwright` (`scripts/a11y-audit.spec.ts`) |
+| **[`website-data-protection`](website-data-protection/SKILL.md)** | Eliminates Server Action BOLA/IDOR, configures dynamic nonce-based CSP (`'strict-dynamic'`), and protects against package hallucination / slopsquatting. | Semgrep rulesets, pinned scanners (`slopgate==0.1.0`), & registry verification |
+| **[`quantitative-ux-engine`](quantitative-ux-engine/SKILL.md)** | Computes decision entropy (`T = b * log2(n+1)`), Fitts's movement time (Shannon formulation default), WCAG centroid geometry, and INP batch slicing. | Python CLI calculation engine (`scripts/ux-metrics.py`) |
+| **[`cognitive-ui-patterns`](cognitive-ui-patterns/SKILL.md)** | Translates cognitive heuristics into UI component structures: Miller's chunking (3–7 items), primary visual salience (Von Restorff), and ergonomic mobile reach. | Component architecture invariants & structured design response contract |
+| **[`frontend-math-precision`](frontend-math-precision/SKILL.md)** | Replaces magic numbers with CSS-native math (`sin`, `cos`, `atan2`), fluid `clamp()`, `linear()` easing, and `DOMMatrixReadOnly` coordinate decomposition. | Browser Baseline support checks and reduced-motion fallbacks |
 
 ---
 
-## 🏛 Three-Tier Progressive Disclosure Architecture
+## 🏛️ Three-Tier Progressive Disclosure Architecture
 
-Unguided agents modifying code frequently drop defensive validation and accessibility attributes to satisfy immediate prompts—compounding critical defects by $\approx 37.6\%$ over 5 rounds ($r \approx 6.59\%$ per iteration). 
+Unguided agents modifying code frequently drop defensive validation, accessibility attributes, and error boundaries across multi-turn iterations to satisfy immediate prompts—compounding critical defects when left unverified.
 
-This repository halts iteration decay by strictly segregating context into three distinct operational tiers:
+This repository halts iteration drift by strictly segregating context into three distinct operational tiers:
 
 ```mermaid
 flowchart TD
@@ -79,7 +79,7 @@ flowchart TD
 ```
 
 1. **Tier 1: Discovery**: Only name, compatibility, and scoped descriptions are loaded at agent startup, consuming a negligible footprint.
-2. **Tier 2: Activation**: The host agent loads the concise `SKILL.md` body ($<500$ lines) only when triggered, preserving $>90\%$ of active model reasoning capacity.
+2. **Tier 2: Activation**: The host agent loads the concise `SKILL.md` body (<500 lines) only when triggered, preserving the vast majority of context for codebase analysis.
 3. **Tier 3: Deep Execution**: Extended checklists (`references/`), verification scripts (`scripts/`), and workflows (`assets/`) load strictly on demand.
 
 ---
@@ -94,10 +94,11 @@ python3 scripts/validate-skills.py
 ```
 
 The validation suite enforces:
-- Directory name matches frontmatter `name` ($\le 64$ characters).
-- Description is $\le 1024$ characters and includes explicit negative triggers.
-- Core `SKILL.md` strictly adheres to the $<500$-line token envelope.
-- Bundled verification scripts execute cleanly with zero errors.
+- Directory name matches frontmatter `name` (<= 64 characters, lowercase alphanumeric and hyphens).
+- Description is <= 1024 characters and strictly includes negative trigger boundaries (`Do NOT trigger...`).
+- Core `SKILL.md` strictly adheres to the < 500-line budget limit.
+- Internal relative markdown links resolve to existing files.
+- Bundled verification test suites (Python calculation engine and Playwright a11y spec) execute cleanly with zero errors.
 
 ---
 

@@ -140,14 +140,19 @@ AI models frequently import administrative credentials into client-side componen
 
 ## 4. Supply-Chain Hallucination Defense (Anti-Slopsquatting)
 
-AI code generators hallucinate package dependencies in ~20% of complex dependency scenarios. Attackers register these hallucinated names on npm/PyPI with embedded post-install malware.
+Empirical security research (e.g. Canovas-Sanchez et al., USENIX Security 2024; Vulcan Cyber) demonstrates that AI code generators frequently invent non-existent package dependencies ("package hallucinations"). Threat actors monitor and register these hallucinated names on public registries (npm, PyPI) with embedded post-install malicious payloads (slopsquatting).
 
 Before committing or installing packages:
-1. Verify package existence on official registries.
-2. Reject packages published $<14\text{ days}$ ago or possessing $<500$ weekly downloads unless explicitly reviewed.
-3. Enforce deterministic CI verification with `slopgate`:
+1. **Registry Verification**: Confirm package existence directly on the authoritative registry (`npm view <pkg>` or `pip index versions <pkg>`). Never install unverified package names recommended by an LLM.
+2. **Package Provenance Triage**: Flag packages published within the last 14 days or having fewer than 500 weekly downloads for manual verification before merging.
+3. **Deterministic CI Verification**: Pin dependency audit tools explicitly. If running `slopgate`, pin the release version:
    ```bash
-   pip install slopgate && slopgate scan . --strict
+   pip install slopgate==0.1.0 && slopgate scan . --strict
+   ```
+   Alternatively, run standard supply-chain vulnerability scanners:
+   ```bash
+   npm audit --audit-level=high
+   pip-audit
    ```
 
 ---

@@ -1,0 +1,16 @@
+{
+  "name": "production-agent-skills",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Production-grade, deterministic agent skills conforming to the Agent Skills Open Standard.",
+  "scripts": {
+    "test": "python3 scripts/validate-skills.py",
+    "test:a11y": "playwright test",
+    "validate": "python3 scripts/validate-skills.py"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.1",
+    "@playwright/test": "^1.49.1",
+    "typescript": "^5.7.2"
+  }
+}

@@ -73,9 +73,9 @@ esac
 
 SKILLS=(
   "ai-website-polish"
+  "cognitive-ui-patterns"
   "frontend-math-precision"
   "quantitative-ux-engine"
-  "ux-laws-for-ai-design"
   "website-data-protection"
 )
 

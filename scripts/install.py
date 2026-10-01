@@ -5,19 +5,18 @@ Compatible with Windows, macOS, and Linux.
 Installs skills into Antigravity, Claude Code, Cursor, or local workspaces.
 """
 
-import os
-import sys
-import shutil
 import argparse
 from pathlib import Path
+import shutil
+import sys
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 SKILLS = [
     "ai-website-polish",
+    "cognitive-ui-patterns",
     "frontend-math-precision",
     "quantitative-ux-engine",
-    "ux-laws-for-ai-design",
     "website-data-protection",
 ]
 
@@ -61,7 +60,7 @@ def main():
 
     skills_to_install = [args.skill] if args.skill else SKILLS
 
-    print(f"=== Installing Production Agent Skills ===")
+    print("=== Installing Production Agent Skills ===")
     print(f"Target Environment : {args.target}")
     print(f"Destination Path   : {dest_dir}")
     if args.dry_run:
@@ -80,10 +79,13 @@ def main():
         if args.dry_run:
             print(f"  [PLAN] Would install: {skill} -> {dst}")
         else:
-            if dst.exists():
-                shutil.rmtree(dst)
-            shutil.copytree(src, dst)
-            print(f"  [INSTALLED] {skill}")
+            try:
+                if dst.exists():
+                    shutil.rmtree(dst)
+                shutil.copytree(src, dst)
+                print(f"  [INSTALLED] {skill}")
+            except OSError as err:
+                print(f"  [ERROR] Failed to install {skill}: {err}", file=sys.stderr)
 
     print("\n✔ Done!")
 

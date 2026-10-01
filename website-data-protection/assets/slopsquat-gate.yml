@@ -1,6 +1,7 @@
+---
 # .github/workflows/slopsquat-gate.yml
 name: Dependency Hallucination Check
-on:
+'on':
   pull_request:
     paths:
       - 'package.json'
@@ -24,5 +25,5 @@ jobs:
 
       - name: Execute Slopsquat Audit
         run: |
-          pip install slopgate
+          pip install slopgate==0.1.0
           slopgate scan . --strict

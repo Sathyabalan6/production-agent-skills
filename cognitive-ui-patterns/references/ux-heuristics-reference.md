@@ -5,10 +5,10 @@ This reference catalogs cognitive psychology principles, mathematical formulas, 
 ## 1. Decision & Time Heuristics
 - **Hick-Hyman Law**: $T = b \cdot \log_2(n + 1)$
   - Decision time grows logarithmically with the number and complexity of choices.
-  - Limit choices per view region $\le 5$. Use category drill-downs or wizard steps when items exceed this threshold.
-- **Fitts's Law**: $MT = a + b \cdot \log_2\left(\frac{2D}{W}\right)$
+  - Structure complex choice sets into logical categorical groupings or sensible defaults when options grow large ($n > 5\text{–}7$). Avoid over-splitting flat, scannable lists into unnecessary nested accordions or excessive wizard steps when rapid scanning is preferred.
+- **Fitts's Law**: $MT = a + b \cdot ID$, with $ID_{\text{Shannon}} = \log_2\left(\frac{D}{W} + 1\right)$
   - Movement time is determined by distance ($D$) to target and target width ($W$).
-  - Maximize primary CTA hit areas ($\ge 48\times 48\text{ px}$) and minimize travel distance by anchoring to screen edges or thumb zones.
+  - Maximize primary CTA hit areas ($\ge 48\times 48\text{ px}$) and minimize travel distance by anchoring to the ergonomic mobile thumb zone (lower 30–35% of display).
 - **Parkinson's Law**:
   - Tasks expand to fill allocated time. Provide clear, minimal workflows with default options and auto-fill to abbreviate task durations.
 - **Doherty Threshold**:

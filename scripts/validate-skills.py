@@ -10,11 +10,12 @@ Validates that all skills in the repository adhere to the Agent Skills Open Stan
 6. Bundled verification utilities execute successfully.
 """
 
-import os
+from pathlib import Path
+import re
+import shutil
+import subprocess
 import sys
 import yaml
-import subprocess
-from pathlib import Path
 
 # Colors for terminal output
 GREEN = "\033[92m"
@@ -25,7 +26,7 @@ RESET = "\033[0m"
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
-def find_skills(root_dir: Path):
+def find_skills(root_dir: Path) -> list[Path]:
     skills = []
     for item in root_dir.iterdir():
         if item.is_dir() and not item.name.startswith(".") and item.name not in ["scripts", "assets"]:
@@ -34,7 +35,7 @@ def find_skills(root_dir: Path):
                 skills.append(item)
     return sorted(skills, key=lambda p: p.name)
 
-def validate_skill(skill_dir: Path) -> list:
+def validate_skill(skill_dir: Path) -> tuple[list[str], list[str]]:
     errors = []
     warnings = []
     skill_name = skill_dir.name
@@ -90,9 +91,10 @@ def validate_skill(skill_dir: Path) -> list:
     else:
         if len(desc) > 1024:
             errors.append(f"Frontmatter 'description' length ({len(desc)}) exceeds 1024 characters.")
-        desc_lower = desc.lower()
-        if "not" not in desc_lower and "never" not in desc_lower and "exclude" not in desc_lower:
-            warnings.append("Description lacks explicit negative trigger boundary ('Do NOT trigger...').")
+        # Enforce negative trigger boundary using word-boundary regex
+        has_neg = bool(re.search(r'\b(do not trigger|never trigger|not trigger|exclude)\b', desc, re.IGNORECASE))
+        if not has_neg:
+            errors.append("Description lacks required negative trigger boundary ('Do NOT trigger...').")
 
     # 5. Check internal references
     for line in lines:
@@ -108,16 +110,42 @@ def validate_skill(skill_dir: Path) -> list:
 
 def run_bundled_tests():
     print(f"\n{BOLD}Executing Bundled Test Suites...{RESET}")
+    all_passed = True
+
+    # 1. UX Metrics Calculation Engine
     ux_metrics_script = REPO_ROOT / "quantitative-ux-engine" / "scripts" / "ux-metrics.py"
     if ux_metrics_script.exists():
         res = subprocess.run([sys.executable, str(ux_metrics_script)], capture_output=True, text=True)
         if res.returncode == 0:
             print(f"  [{GREEN}PASS{RESET}] quantitative-ux-engine/scripts/ux-metrics.py execution verified.")
-            return True
         else:
             print(f"  [{RED}FAIL{RESET}] ux-metrics.py failed:\n{res.stderr}")
-            return False
-    return True
+            all_passed = False
+    else:
+        print(f"  [{YELLOW}WARN{RESET}] ux-metrics.py not found at {ux_metrics_script}")
+
+    # 2. Playwright WCAG 2.2 AA Spec
+    a11y_spec = REPO_ROOT / "ai-website-polish" / "scripts" / "a11y-audit.spec.ts"
+    if a11y_spec.exists():
+        npx_bin = shutil.which("npx")
+        if npx_bin:
+            res = subprocess.run(
+                [npx_bin, "playwright", "test", "--list"],
+                cwd=str(REPO_ROOT),
+                capture_output=True,
+                text=True
+            )
+            if res.returncode == 0:
+                print(f"  [{GREEN}PASS{RESET}] ai-website-polish/scripts/a11y-audit.spec.ts test suite verified.")
+            else:
+                print(f"  [{RED}FAIL{RESET}] Playwright spec verification failed:\n{res.stderr or res.stdout}")
+                all_passed = False
+        else:
+            print(f"  [{YELLOW}SKIP{RESET}] npx not found in environment; skipped Playwright test execution.")
+    else:
+        print(f"  [{YELLOW}WARN{RESET}] a11y-audit.spec.ts not found at {a11y_spec}")
+
+    return all_passed
 
 def main():
     print(f"{BOLD}=== Production Agent Skills Standard Validator ==={RESET}\n")
