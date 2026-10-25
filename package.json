@@ -6,6 +6,8 @@
   "scripts": {
     "test": "python3 scripts/validate-skills.py",
     "test:a11y": "playwright test",
+    "test:dry-run": "bash install.sh --dry-run && python3 scripts/install.py --dry-run",
+    "lint": "python3 scripts/validate-skills.py",
     "validate": "python3 scripts/validate-skills.py"
   },
   "devDependencies": {

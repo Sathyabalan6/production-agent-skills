@@ -46,10 +46,12 @@ Before submitting a Pull Request, run the automated test suite locally:
 
 ```bash
 # Validate all skills against standard constraints
-python3 scripts/validate-skills.py
+npm test
+# or: python3 scripts/validate-skills.py
 
 # Test the installer in dry-run mode
-bash install.sh --dry-run
+npm run test:dry-run
+# or: bash install.sh --dry-run
 ```
 
 All skills must pass with zero errors before being merged.
